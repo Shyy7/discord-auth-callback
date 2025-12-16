@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Login</title>
+    <style>
+        :root {
+            --bg-dark: #18181b;
+            --bg-card: #27272a;
+            --bg-input: #3f3f46;
+            --border: #52525b;
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #71717a;
+            --success: #22c55e;
+            --warning: #eab308;
+            --error: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 32px;
+            max-width: 420px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .status {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .status.success {
+            color: var(--success);
+        }
+
+        .status.warning {
+            color: var(--warning);
+        }
+
+        .status.error {
+            color: var(--error);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--text);
+            color: var(--bg-dark);
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            background: #e4e4e7;
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            font-size: 0.8125rem;
+        }
+
+        .btn-secondary:hover {
+            background: #52525b;
+        }
+
+        .btn-secondary.copied {
+            background: var(--success);
+            color: var(--bg-dark);
+            border-color: var(--success);
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 24px 0;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .field {
+            margin-bottom: 12px;
+        }
+
+        .field:last-child {
+            margin-bottom: 0;
+        }
+
+        .field label {
+            display: block;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .field input {
+            flex: 1;
+            padding: 10px 12px;
+            font-size: 0.8125rem;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            outline: none;
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+        }
+
+        .notice {
+            margin-top: 20px;
+            padding: 12px;
+            background: var(--bg-input);
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .notice p {
+            margin-bottom: 8px;
+        }
+
+        .notice p:last-child {
+            margin-bottom: 0;
+        }
+
+        .error-box {
+            background: var(--bg-input);
+            border: 1px solid var(--error);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .error-box code {
+            display: block;
+            margin-top: 8px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            font-size: 0.8125rem;
+            word-break: break-all;
+            color: var(--text-muted);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--text);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="error-state" class="hidden">
+            <h1>Authentication Failed</h1>
+            <p class="status error">An error occurred during login</p>
+            <div class="error-box">
+                <strong>Error</strong>
+                <code id="error-message"></code>
+            </div>
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+                Close this window and try again from the game.
+            </p>
+        </div>
+        <div id="no-code-state" class="hidden">
+            <h1>Missing Authorization</h1>
+            <p class="status warning">No authorization code found</p>
+            <p style="font-size: 0.875rem; color: var(--text-muted);">
+                Please initiate the login from the game.
+            </p>
+        </div>
+        <div id="success-state" class="hidden">
+            <h1>Login Complete</h1>
+            <p class="status success">
+                <span class="spinner"></span>
+                Returning to game...
+            </p>
+            <button id="open-app-btn" class="btn btn-primary">Open Game</button>
+            <div class="divider"></div>
+            <p class="section-title">Manual Entry</p>
+            <div class="field">
+                <label>Code</label>
+                <div class="field-row">
+                    <input type="text" id="code-field" readonly>
+                    <button id="copy-code-btn" class="btn btn-secondary">Copy</button>
+                </div>
+            </div>
+            <div class="field">
+                <label>State</label>
+                <div class="field-row">
+                    <input type="text" id="state-field" readonly>
+                    <button id="copy-state-btn" class="btn btn-secondary">Copy</button>
+                </div>
+            </div>
+            <div class="notice">
+                <p>If the game did not open, copy the values above and paste them in the game, or click "Open Game"
+                    again.</p>
+                <p>Make sure the game is running and not blocked by your firewall.</p>
+            </div>
+            <div class="divider"></div>
+            <p class="section-title">Security</p>
+            <div class="notice">
+                <p>Only proceed if you started this login from the game.</p>
+                <p>Verify the state value matches what your game expects.</p>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function () {
+            'use strict';
+            const LOOPBACK_PORT = 41728;
+            const LOOPBACK_URL = `http://127.0.0.1:${LOOPBACK_PORT}/discord-auth/`;
+            const errorState = document.getElementById('error-state');
+            const noCodeState = document.getElementById('no-code-state');
+            const successState = document.getElementById('success-state');
+            const errorMessage = document.getElementById('error-message');
+            const codeField = document.getElementById('code-field');
+            const stateField = document.getElementById('state-field');
+            const openAppBtn = document.getElementById('open-app-btn');
+            const copyCodeBtn = document.getElementById('copy-code-btn');
+            const copyStateBtn = document.getElementById('copy-state-btn');
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const state = params.get('state');
+            const error = params.get('error');
+            const errorDescription = params.get('error_description');
+            function buildLoopbackUrl() {
+                const redirectParams = new URLSearchParams();
+                if (code) redirectParams.set('code', code);
+                if (state) redirectParams.set('state', state);
+                return LOOPBACK_URL + '?' + redirectParams.toString();
+            }
+            function redirectToApp() {
+                window.location.replace(buildLoopbackUrl());
+            }
+            async function copyToClipboard(text, button) {
+                let success = false;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        success = true;
+                    } catch (err) { }
+                }
+                if (!success) {
+                    try {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = text;
+                        textarea.style.position = 'fixed';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        success = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                    } catch (err) { }
+                }
+                if (success) {
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied';
+                    button.classList.add('copied');
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.classList.remove('copied');
+                    }, 1500);
+                }
+            }
+            function initialize() {
+                if (error) {
+                    errorState.classList.remove('hidden');
+                    let fullError = error;
+                    if (errorDescription) {
+                        fullError += ' - ' + decodeURIComponent(errorDescription.replace(/\+/g, ' '));
+                    }
+                    errorMessage.textContent = fullError;
+                    return;
+                }
+                if (!code) {
+                    noCodeState.classList.remove('hidden');
+                    return;
+                }
+                successState.classList.remove('hidden');
+                codeField.value = code;
+                stateField.value = state || '';
+                openAppBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    redirectToApp();
+                });
+                copyCodeBtn.addEventListener('click', function () {
+                    copyToClipboard(code, copyCodeBtn);
+                });
+                copyStateBtn.addEventListener('click', function () {
+                    copyToClipboard(state || '', copyStateBtn);
+                });
+                setTimeout(function () {
+                    redirectToApp();
+                }, 300);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initialize);
+            } else {
+                initialize();
+            }
+        })();
+    </script>
+</body>
+
+</html>
